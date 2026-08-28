@@ -1,0 +1,143 @@
+name: Build and release Classic WebUI
+
+on:
+  workflow_dispatch:
+    inputs:
+      qb_tag:
+        description: "Optional qBittorrent tag, e.g. release-5.2.3. Empty = latest stable."
+        required: false
+        type: string
+      force_rebuild:
+        description: "Rebuild and replace assets if this release already exists"
+        required: false
+        default: false
+        type: boolean
+
+  schedule:
+    - cron: "17 2 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qbittorrent-classic-release
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve qBittorrent and Classic versions
+        id: meta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MANUAL_TAG: ${{ inputs.qb_tag }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -n "${MANUAL_TAG:-}" ]]; then
+            QBT_TAG="$MANUAL_TAG"
+          else
+            QBT_TAG="$(gh api repos/qbittorrent/qBittorrent/releases/latest --jq '.tag_name')"
+          fi
+
+          [[ "$QBT_TAG" == release-* ]] || {
+            echo "Unexpected upstream tag: $QBT_TAG"
+            exit 1
+          }
+
+          gh api "repos/qbittorrent/qBittorrent/git/ref/tags/${QBT_TAG}" >/dev/null
+
+          QBT_VERSION="${QBT_TAG#release-}"
+          CLASSIC_VERSION="$(tr -d '[:space:]' < classic/VERSION)"
+          RELEASE_TAG="qb-${QBT_VERSION}-classic-${CLASSIC_VERSION}"
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            if [[ "${FORCE_REBUILD:-false}" == "true" ]]; then
+              BUILD_NEEDED=true
+            else
+              BUILD_NEEDED=false
+            fi
+          else
+            BUILD_NEEDED=true
+          fi
+
+          {
+            echo "qb_tag=$QBT_TAG"
+            echo "qb_version=$QBT_VERSION"
+            echo "classic_version=$CLASSIC_VERSION"
+            echo "release_tag=$RELEASE_TAG"
+            echo "build_needed=$BUILD_NEEDED"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Upstream: $QBT_TAG"
+          echo "Classic:  $CLASSIC_VERSION"
+          echo "Release:  $RELEASE_TAG"
+          echo "Build:    $BUILD_NEEDED"
+
+      - name: Nothing new
+        if: steps.meta.outputs.build_needed != 'true'
+        run: echo "Release already exists. No build required."
+
+      - name: Install translation and packaging tools
+        if: steps.meta.outputs.build_needed == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qt6-l10n-tools zip
+
+      - name: Build official WebUI + Classic overlay
+        if: steps.meta.outputs.build_needed == 'true'
+        run: |
+          chmod +x scripts/build.sh
+          scripts/build.sh \
+            "${{ steps.meta.outputs.qb_tag }}" \
+            "${{ steps.meta.outputs.classic_version }}"
+
+      - name: Publish GitHub Release
+        if: steps.meta.outputs.build_needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
+          QBT_VERSION: ${{ steps.meta.outputs.qb_version }}
+          CLASSIC_VERSION: ${{ steps.meta.outputs.classic_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSIONED_ZIP="dist/classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
+          VERSIONED_SHA="${VERSIONED_ZIP}.sha256"
+          LATEST_ZIP="dist/classic-webui-latest.zip"
+          LATEST_SHA="${LATEST_ZIP}.sha256"
+
+          NOTES="$(cat <<EOF
+          qBittorrent ${QBT_VERSION} + Classic ${CLASSIC_VERSION}
+
+          - Upstream HTML / JavaScript / WebAPI are from the official qBittorrent release.
+          - Classic changes are visual CSS only.
+          - Official WebUI translations are compiled to .qm, including zh_CN.
+          - Package root contains public/, private/, and translations/ for Alternate WebUI.
+          - No symlinks or non-regular filesystem objects are allowed.
+          EOF
+          )"
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" \
+              "$VERSIONED_ZIP" "$VERSIONED_SHA" "$LATEST_ZIP" "$LATEST_SHA" \
+              --clobber
+            gh release edit "$RELEASE_TAG" \
+              --title "qBittorrent ${QBT_VERSION} Classic ${CLASSIC_VERSION}" \
+              --notes "$NOTES" \
+              --latest
+          else
+            gh release create "$RELEASE_TAG" \
+              "$VERSIONED_ZIP" "$VERSIONED_SHA" "$LATEST_ZIP" "$LATEST_SHA" \
+              --title "qBittorrent ${QBT_VERSION} Classic ${CLASSIC_VERSION}" \
+              --notes "$NOTES" \
+              --latest
+          fi
