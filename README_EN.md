@@ -18,11 +18,11 @@ GitHub Actions automatically builds Releases from official stable qBittorrent ve
 
 ### Default
 
-![Default](docs/screenshots/default.webp)
+![Default](docs/screenshots/default.png)
 
 ### Compact (qBittorrent 5.2.0+)
 
-![Compact](docs/screenshots/compact.webp)
+![Compact](docs/screenshots/compact.png)
 
 ## Installation
 
