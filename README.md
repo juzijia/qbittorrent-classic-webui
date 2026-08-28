@@ -6,7 +6,7 @@
 
 一直不喜欢新版 qBittorrent WebUI 的颜色：太亮、太艳，长时间看有点晃眼。
 
-更喜欢以前偏灰度、低饱和、紧凑的界面，所以做了这个工作流，把新版 qBittorrent 的官方 WebUI 保留下来，只覆盖视觉样式，尽量找回以前的感觉。
+更喜欢以前偏灰度、低饱和、紧凑的界面，所以做了这个工作流：保留新版 qBittorrent 官方 WebUI，只覆盖视觉样式，尽量找回以前的感觉。
 
 - 功能、WebAPI、页面逻辑：来自对应版本的 qBittorrent 官方 WebUI
 - Classic：只修改 CSS 视觉样式
@@ -17,12 +17,12 @@
 1. 在 **Releases** 下载：
 
 ```text
-classic-webui-qbX.Y.Z.zip
+classic-webui.zip
 ```
 
-2. 找到宿主机中**映射到容器 `/config` 的目录**，直接把 ZIP 解压到这个目录。
+2. 找到宿主机中**映射到容器 `/config` 的目录**。
 
-解压后应为：
+NAS 文件管理器通常会按压缩包名创建文件夹。把 `classic-webui.zip` 解压到该目录后，应得到：
 
 ```text
 classic-webui/
@@ -32,14 +32,20 @@ classic-webui/
 └── COPYING
 ```
 
-如果你的 Docker 配置类似：
+如果使用命令行，请明确解压到 `classic-webui` 目录：
+
+```bash
+unzip classic-webui.zip -d ./classic-webui
+```
+
+例如 Docker 已有：
 
 ```yaml
 volumes:
   - ./config:/config
 ```
 
-那么最终目录就是：
+最终宿主机目录应为：
 
 ```text
 ./config/classic-webui
@@ -53,23 +59,17 @@ volumes:
 工具 → 选项 → Web UI
 ```
 
-启用：
-
-```text
-使用备选 WebUI
-```
-
-文件位置填写：
+启用 **使用备选 WebUI**，文件位置填写：
 
 ```text
 /config/classic-webui
 ```
 
-4. 保存设置，刷新浏览器即可。
+4. 保存并刷新浏览器。
 
 ### 更新
 
-以后下载新的 Release，直接用新的 `classic-webui` 文件夹替换旧目录即可。qBittorrent 里的路径保持：
+下载新 Release，用新的 `classic-webui` 目录替换旧目录即可。qBittorrent 里的路径保持不变：
 
 ```text
 /config/classic-webui
@@ -94,12 +94,12 @@ This project keeps the official qBittorrent WebUI and only applies a Classic CSS
 1. Download from **Releases**:
 
 ```text
-classic-webui-qbX.Y.Z.zip
+classic-webui.zip
 ```
 
-2. Extract it inside the host directory that is already mounted to `/config` in the qBittorrent container.
+2. Locate the host directory already mounted to `/config` in the qBittorrent container.
 
-The result should be:
+Most NAS file managers create a directory from the archive name automatically. After extraction, the result should be:
 
 ```text
 classic-webui/
@@ -109,6 +109,12 @@ classic-webui/
 └── COPYING
 ```
 
+For command-line extraction, explicitly extract into the `classic-webui` directory:
+
+```bash
+unzip classic-webui.zip -d ./classic-webui
+```
+
 Example Docker mapping:
 
 ```yaml
@@ -116,7 +122,7 @@ volumes:
   - ./config:/config
 ```
 
-Result:
+Final host path:
 
 ```text
 ./config/classic-webui
