@@ -2,7 +2,6 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CLASSIC_VERSION="${2:-$(tr -d '[:space:]' < "$ROOT_DIR/classic/VERSION")}"
 QBT_TAG="${1:-}"
 
 if [[ -z "$QBT_TAG" ]]; then
@@ -34,7 +33,6 @@ trap cleanup EXIT
 URL="https://github.com/qbittorrent/qBittorrent/archive/refs/tags/${QBT_TAG}.tar.gz"
 
 echo "==> qBittorrent: $QBT_TAG"
-echo "==> Classic:     $CLASSIC_VERSION"
 echo "==> Download:    $URL"
 
 curl -fL --retry 3 --connect-timeout 20 "$URL" -o "$ARCHIVE"
@@ -48,8 +46,9 @@ fi
 
 WWW="$QBT_ROOT/src/webui/www"
 [[ -d "$WWW/private" ]] || { echo "ERROR: upstream private/ missing" >&2; exit 1; }
-[[ -d "$WWW/public"  ]] || { echo "ERROR: upstream public/ missing" >&2; exit 1; }
+[[ -d "$WWW/public" ]] || { echo "ERROR: upstream public/ missing" >&2; exit 1; }
 [[ -d "$WWW/translations" ]] || { echo "ERROR: upstream translations/ missing" >&2; exit 1; }
+[[ -f "$QBT_ROOT/COPYING" ]] || { echo "ERROR: upstream COPYING missing" >&2; exit 1; }
 
 echo "==> Copy official WebUI"
 cp -a "$WWW/private" "$BUILD_DIR/"
@@ -109,19 +108,7 @@ PY
 inject_css "$BUILD_DIR/private/index.html" 'css/Tabs.css' 'css/classic.css'
 inject_css "$BUILD_DIR/public/index.html" 'css/login.css' 'css/classic.css'
 
-echo "==> Add provenance / license"
-if [[ -f "$QBT_ROOT/COPYING" ]]; then
-    cp "$QBT_ROOT/COPYING" "$BUILD_DIR/LICENSE.qBittorrent"
-fi
-
-cat > "$BUILD_DIR/BUILD-INFO.txt" <<EOF
-qBittorrent tag: ${QBT_TAG}
-qBittorrent version: ${QBT_VERSION}
-Classic version: ${CLASSIC_VERSION}
-Upstream source: https://github.com/qbittorrent/qBittorrent/tree/${QBT_TAG}
-Build type: official WebUI + visual-only Classic CSS overlay
-Expected qBittorrent Alternate WebUI path in Docker: /config/classic-webui
-EOF
+cp "$QBT_ROOT/COPYING" "$BUILD_DIR/COPYING"
 
 echo "==> Validate package"
 required=(
@@ -130,6 +117,7 @@ required=(
     "$BUILD_DIR/public/css/classic.css"
     "$BUILD_DIR/private/css/classic.css"
     "$BUILD_DIR/translations/webui_zh_CN.qm"
+    "$BUILD_DIR/COPYING"
 )
 
 for f in "${required[@]}"; do
@@ -151,7 +139,7 @@ if [[ -n "$BAD_TYPE" ]]; then
     exit 1
 fi
 
-VERSIONED_ZIP="$DIST_DIR/classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
+VERSIONED_ZIP="$DIST_DIR/classic-webui-qb${QBT_VERSION}.zip"
 
 echo "==> Package with top-level classic-webui/ directory"
 (
@@ -167,5 +155,4 @@ echo "==> Package with top-level classic-webui/ directory"
 echo
 echo "BUILD_OK"
 echo "qBittorrent=$QBT_VERSION"
-echo "Classic=$CLASSIC_VERSION"
 echo "Artifact=$VERSIONED_ZIP"
