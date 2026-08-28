@@ -139,20 +139,20 @@ if [[ -n "$BAD_TYPE" ]]; then
     exit 1
 fi
 
-VERSIONED_ZIP="$DIST_DIR/classic-webui-qb${QBT_VERSION}.zip"
+ZIP="$DIST_DIR/classic-webui.zip"
 
-echo "==> Package with top-level classic-webui/ directory"
+echo "==> Package"
 (
-    cd "$BUILD_ROOT"
-    zip -qr "$VERSIONED_ZIP" classic-webui
+    cd "$BUILD_DIR"
+    zip -qr "$ZIP" .
 )
 
 (
     cd "$DIST_DIR"
-    sha256sum "$(basename "$VERSIONED_ZIP")" > "$(basename "$VERSIONED_ZIP").sha256"
+    sha256sum "$(basename "$ZIP")" > "$(basename "$ZIP").sha256"
 )
 
 echo
 echo "BUILD_OK"
 echo "qBittorrent=$QBT_VERSION"
-echo "Artifact=$VERSIONED_ZIP"
+echo "Artifact=$ZIP"
