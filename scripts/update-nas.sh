@@ -24,10 +24,10 @@ fi
 command -v curl >/dev/null 2>&1 || { echo "ERROR: curl required"; exit 1; }
 command -v unzip >/dev/null 2>&1 || { echo "ERROR: unzip required"; exit 1; }
 command -v sha256sum >/dev/null 2>&1 || { echo "ERROR: sha256sum required"; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "ERROR: python3 required"; exit 1; }
 
 TMP="${TMPDIR:-/tmp}/qb-classic-update.$$"
-ZIP="$TMP/classic-webui-latest.zip"
-SHA="$TMP/classic-webui-latest.zip.sha256"
+RELEASE_JSON="$TMP/release.json"
 NEW="$TMP/new"
 BACKUP="${TARGET}.backup"
 
@@ -38,69 +38,86 @@ trap cleanup EXIT INT TERM
 
 mkdir -p "$TMP" "$NEW"
 
-download_public() {
-    BASE="https://github.com/${REPO}/releases/latest/download"
-    curl -fL --retry 3 "$BASE/classic-webui-latest.zip" -o "$ZIP"
-    curl -fL --retry 3 "$BASE/classic-webui-latest.zip.sha256" -o "$SHA"
-}
-
-download_private() {
-    command -v python3 >/dev/null 2>&1 || {
-        echo "ERROR: private GitHub repo update requires python3 for Release asset lookup"
-        exit 1
-    }
-
-    RELEASE_JSON="$TMP/release.json"
+echo "==> Resolve latest Release"
+if [ -n "${GH_TOKEN:-}" ]; then
+    echo "    Repository mode: authenticated/private"
     curl -fsSL --retry 3 \
         -H "Accept: application/vnd.github+json" \
         -H "Authorization: Bearer ${GH_TOKEN}" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
         "https://api.github.com/repos/${REPO}/releases/latest" \
         -o "$RELEASE_JSON"
-
-    asset_url() {
-        python3 - "$RELEASE_JSON" "$1" <<'PY'
-import json, sys
-path, wanted = sys.argv[1], sys.argv[2]
-with open(path, "r", encoding="utf-8") as f:
-    release = json.load(f)
-for asset in release.get("assets", []):
-    if asset.get("name") == wanted:
-        print(asset["url"])
-        raise SystemExit(0)
-raise SystemExit(f"ERROR: Release asset not found: {wanted}")
-PY
-    }
-
-    ZIP_URL="$(asset_url classic-webui-latest.zip)"
-    SHA_URL="$(asset_url classic-webui-latest.zip.sha256)"
-
-    curl -fL --retry 3 \
-        -H "Accept: application/octet-stream" \
-        -H "Authorization: Bearer ${GH_TOKEN}" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
-        "$ZIP_URL" -o "$ZIP"
-
-    curl -fL --retry 3 \
-        -H "Accept: application/octet-stream" \
-        -H "Authorization: Bearer ${GH_TOKEN}" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
-        "$SHA_URL" -o "$SHA"
-}
-
-echo "==> Download latest Classic WebUI"
-if [ -n "${GH_TOKEN:-}" ]; then
-    echo "    Repository mode: authenticated/private"
-    download_private
 else
     echo "    Repository mode: public/unauthenticated"
-    download_public
+    curl -fsSL --retry 3 \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        "https://api.github.com/repos/${REPO}/releases/latest" \
+        -o "$RELEASE_JSON"
+fi
+
+ASSET_META="$(python3 - "$RELEASE_JSON" <<'PY'
+import json, re, sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    release = json.load(f)
+
+assets = release.get("assets", [])
+zips = [a for a in assets if re.fullmatch(r"classic-webui-qb.+-classic-.+\.zip", a.get("name", ""))]
+if len(zips) != 1:
+    raise SystemExit(f"ERROR: expected exactly one versioned ZIP asset, found {len(zips)}")
+
+zip_asset = zips[0]
+sha_name = zip_asset["name"] + ".sha256"
+sha_assets = [a for a in assets if a.get("name") == sha_name]
+if len(sha_assets) != 1:
+    raise SystemExit(f"ERROR: expected SHA256 asset: {sha_name}")
+sha_asset = sha_assets[0]
+
+print(zip_asset["name"])
+print(zip_asset["url"])
+print(zip_asset["browser_download_url"])
+print(sha_asset["name"])
+print(sha_asset["url"])
+print(sha_asset["browser_download_url"])
+PY
+)"
+
+ZIP_NAME="$(printf '%s\n' "$ASSET_META" | sed -n '1p')"
+ZIP_API_URL="$(printf '%s\n' "$ASSET_META" | sed -n '2p')"
+ZIP_BROWSER_URL="$(printf '%s\n' "$ASSET_META" | sed -n '3p')"
+SHA_NAME="$(printf '%s\n' "$ASSET_META" | sed -n '4p')"
+SHA_API_URL="$(printf '%s\n' "$ASSET_META" | sed -n '5p')"
+SHA_BROWSER_URL="$(printf '%s\n' "$ASSET_META" | sed -n '6p')"
+
+ZIP="$TMP/$ZIP_NAME"
+SHA="$TMP/$SHA_NAME"
+
+echo "    ZIP: $ZIP_NAME"
+echo "    SHA: $SHA_NAME"
+
+echo "==> Download Release assets"
+if [ -n "${GH_TOKEN:-}" ]; then
+    curl -fL --retry 3 \
+        -H "Accept: application/octet-stream" \
+        -H "Authorization: Bearer ${GH_TOKEN}" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        "$ZIP_API_URL" -o "$ZIP"
+
+    curl -fL --retry 3 \
+        -H "Accept: application/octet-stream" \
+        -H "Authorization: Bearer ${GH_TOKEN}" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        "$SHA_API_URL" -o "$SHA"
+else
+    curl -fL --retry 3 "$ZIP_BROWSER_URL" -o "$ZIP"
+    curl -fL --retry 3 "$SHA_BROWSER_URL" -o "$SHA"
 fi
 
 echo "==> Verify SHA256"
 (
     cd "$TMP"
-    sha256sum -c "$(basename "$SHA")"
+    sha256sum -c "$SHA_NAME"
 )
 
 echo "==> Extract and validate"
@@ -156,5 +173,6 @@ rm -rf "$BACKUP"
 
 echo
 echo "UPDATE_OK"
+echo "Installed: $ZIP_NAME"
 echo "Target: $TARGET"
 echo "WebUI root in qBittorrent should remain: /webui"
