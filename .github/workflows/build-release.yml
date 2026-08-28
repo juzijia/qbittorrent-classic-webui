@@ -98,6 +98,22 @@ jobs:
           echo "Release:  $RELEASE_TAG"
           echo "Build:    $BUILD_NEEDED"
 
+      - name: Remove legacy Classic releases
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r tag; do
+            [[ -z "$tag" ]] && continue
+            echo "Deleting legacy release: $tag"
+            gh release delete "$tag" --cleanup-tag -y
+          done < <(
+            gh release list --limit 100 --json tagName --jq '.[].tagName' \
+              | grep -E '^qb-.+-classic-v[0-9]+$' || true
+          )
+
       - name: Nothing new
         if: steps.meta.outputs.build_needed != 'true'
         run: echo "Release already exists with the expected two assets. No build required."
