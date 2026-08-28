@@ -2,11 +2,6 @@
  * qBittorrent Classic WebUI
  * Visual overlay for the official qBittorrent WebUI.
  * Functional HTML / JS / WebAPI remain upstream.
- *
- * Classic V2:
- * - qBittorrent 4.4.5-inspired visual language
- * - preserves qBittorrent 5.2.x Display density behavior
- * - compact mode now has a visibly tighter density
  */
 
 :root:not(.dark) {
@@ -48,16 +43,20 @@
 :root:not(.dark) #mochaToolbar {
     background: #fafafa;
     border-bottom: 1px solid #c7c7c7;
-    height: 29px !important;
+    height: 31px !important;
     margin-top: 0 !important;
-    padding-top: 3px;
+    padding-top: 4px;
 }
 
 :root:not(.dark) #mochaToolbar .mochaToolButton {
     width: 18px !important;
     height: 18px !important;
-    margin-right: 7px;
+    margin-right: 11px;
     filter: saturate(55%) brightness(78%) contrast(108%);
+}
+
+:root:not(.dark) #mochaToolbar .divider {
+    padding-left: 16px;
 }
 
 :root:not(.dark) #topPrioButton img,
@@ -251,10 +250,7 @@
     opacity: 1 !important;
 }
 
-/* qBittorrent 5.2.x Display density: Compact
- * Keep the Classic theme, but do not suppress qB's density preference.
- * These rules intentionally come last so the user-visible difference is clear.
- */
+/* qBittorrent 5.2.x Display density: Compact */
 :root.compact:not(.dark) body {
     --icon-size: 13px;
     line-height: 15px;
@@ -273,7 +269,11 @@
 :root.compact:not(.dark) #mochaToolbar .mochaToolButton {
     width: 17px !important;
     height: 17px !important;
-    margin-right: 6px;
+    margin-right: 7px;
+}
+
+:root.compact:not(.dark) #mochaToolbar .divider {
+    padding-left: 13px;
 }
 
 :root.compact:not(.dark) .filterTitle {
