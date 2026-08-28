@@ -39,7 +39,7 @@ The Release workflow runs in three cases:
 - Manual **Actions → Build and release Classic WebUI → Run workflow**.
 - Daily scheduled check for a new official qBittorrent stable release.
 
-If a matching `qBittorrent version + Classic version` Release already exists, scheduled runs skip rebuilding it.
+If a matching `qBittorrent version + Classic version` Release already exists with the expected two assets, scheduled runs skip rebuilding it.
 
 The workflow uses the repository's built-in `GITHUB_TOKEN` and declares:
 
@@ -52,13 +52,11 @@ No personal access token is required for GitHub Actions to publish Releases.
 
 ## Release assets
 
-A successful build publishes both a versioned artifact and stable latest assets:
+Each Release intentionally contains exactly two files:
 
 ```text
 classic-webui-qb5.2.3-classic-v1.zip
 classic-webui-qb5.2.3-classic-v1.zip.sha256
-classic-webui-latest.zip
-classic-webui-latest.zip.sha256
 ```
 
 The ZIP root is directly mountable and contains:
@@ -70,6 +68,8 @@ translations/
 BUILD-INFO.txt
 LICENSE.qBittorrent
 ```
+
+There is no duplicated `latest.zip`. The NAS updater reads the latest GitHub Release metadata and automatically discovers the current versioned ZIP and matching SHA256 file.
 
 ## Docker Compose
 
@@ -108,7 +108,7 @@ GH_TOKEN='YOUR_FINE_GRAINED_TOKEN' \
 
 Do not hard-code the token inside the script or Compose file.
 
-The updater downloads the latest Release, verifies SHA256 and required files, rejects symlinks/non-regular filesystem objects, briefly stops qBittorrent, swaps `./classic-webui`, and starts qBittorrent again. If startup fails, it rolls back the previous WebUI directory.
+The updater resolves the latest versioned Release asset, verifies SHA256 and required files, rejects symlinks/non-regular filesystem objects, briefly stops qBittorrent, swaps `./classic-webui`, and starts qBittorrent again. If startup fails, it rolls back the previous WebUI directory.
 
 ## Classic visual version
 
