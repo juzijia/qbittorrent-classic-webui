@@ -139,7 +139,8 @@ jobs:
           - Upstream HTML / JavaScript / WebAPI are from the official qBittorrent release.
           - Classic changes are visual CSS only.
           - Official WebUI translations are compiled to .qm, including zh_CN.
-          - Package root contains public/, private/, and translations/ for Alternate WebUI.
+          - ZIP contains one top-level classic-webui/ directory for direct extraction into config/.
+          - Recommended Alternate WebUI root: /config/classic-webui.
           - Release intentionally contains exactly two assets: ZIP + SHA256.
           EOF
           )"
