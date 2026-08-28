@@ -3,12 +3,10 @@
  * Visual overlay for the official qBittorrent WebUI.
  * Functional HTML / JS / WebAPI remain upstream.
  *
- * Classic V1 finalized from qBittorrent 4.4.5 visual language:
- * - compact desktop density
- * - dark blue selection
- * - neutral gray headers and borders
- * - low-saturation semantic icons
- * - classic neutral tabs
+ * Classic V2:
+ * - qBittorrent 4.4.5-inspired visual language
+ * - preserves qBittorrent 5.2.x Display density behavior
+ * - compact mode now has a visibly tighter density
  */
 
 :root:not(.dark) {
@@ -251,4 +249,60 @@
 :root:not(.dark) span.flags {
     filter: none !important;
     opacity: 1 !important;
+}
+
+/* qBittorrent 5.2.x Display density: Compact
+ * Keep the Classic theme, but do not suppress qB's density preference.
+ * These rules intentionally come last so the user-visible difference is clear.
+ */
+:root.compact:not(.dark) body {
+    --icon-size: 13px;
+    line-height: 15px;
+}
+
+:root.compact:not(.dark) #desktopNavbar ul li a {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+:root.compact:not(.dark) #mochaToolbar {
+    height: 27px !important;
+    padding-top: 2px;
+}
+
+:root.compact:not(.dark) #mochaToolbar .mochaToolButton {
+    width: 17px !important;
+    height: 17px !important;
+    margin-right: 6px;
+}
+
+:root.compact:not(.dark) .filterTitle {
+    padding: 2px 0 1px 5px;
+}
+
+:root.compact:not(.dark) ul.filterList span.link {
+    min-height: 18px;
+    padding: 1px 4px;
+}
+
+:root.compact:not(.dark) .dynamicTable th {
+    padding: 2px 4px !important;
+}
+
+:root.compact:not(.dark) #transferList .dynamicTable td {
+    height: 18px;
+    line-height: 16px;
+    padding: 0 3px !important;
+}
+
+:root.compact:not(.dark) #propertiesPanel_header {
+    height: 25px;
+}
+
+:root.compact:not(.dark) .tab-menu {
+    line-height: 14px;
+}
+
+:root.compact:not(.dark) .tab-menu li a {
+    padding: 3px 8px 2px !important;
 }
