@@ -65,12 +65,22 @@ jobs:
           QBT_VERSION="${QBT_TAG#release-}"
           CLASSIC_VERSION="$(tr -d '[:space:]' < classic/VERSION)"
           RELEASE_TAG="qb-${QBT_VERSION}-classic-${CLASSIC_VERSION}"
+          EXPECTED_ZIP="classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
+          EXPECTED_SHA="${EXPECTED_ZIP}.sha256"
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             if [[ "${FORCE_REBUILD:-false}" == "true" ]]; then
               BUILD_NEEDED=true
             else
-              BUILD_NEEDED=false
+              ASSETS="$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')"
+              COUNT="$(printf '%s\n' "$ASSETS" | sed '/^$/d' | wc -l | tr -d ' ')"
+              if [[ "$COUNT" != "2" ]] \
+                || ! grep -Fxq "$EXPECTED_ZIP" <<< "$ASSETS" \
+                || ! grep -Fxq "$EXPECTED_SHA" <<< "$ASSETS"; then
+                BUILD_NEEDED=true
+              else
+                BUILD_NEEDED=false
+              fi
             fi
           else
             BUILD_NEEDED=true
@@ -91,7 +101,7 @@ jobs:
 
       - name: Nothing new
         if: steps.meta.outputs.build_needed != 'true'
-        run: echo "Release already exists. No build required."
+        run: echo "Release already exists with the expected two assets. No build required."
 
       - name: Install translation and packaging tools
         if: steps.meta.outputs.build_needed == 'true'
@@ -120,8 +130,8 @@ jobs:
 
           VERSIONED_ZIP="dist/classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
           VERSIONED_SHA="${VERSIONED_ZIP}.sha256"
-          LATEST_ZIP="dist/classic-webui-latest.zip"
-          LATEST_SHA="${LATEST_ZIP}.sha256"
+          ZIP_NAME="$(basename "$VERSIONED_ZIP")"
+          SHA_NAME="$(basename "$VERSIONED_SHA")"
 
           NOTES="$(cat <<EOF
           qBittorrent ${QBT_VERSION} + Classic ${CLASSIC_VERSION}
@@ -130,21 +140,25 @@ jobs:
           - Classic changes are visual CSS only.
           - Official WebUI translations are compiled to .qm, including zh_CN.
           - Package root contains public/, private/, and translations/ for Alternate WebUI.
-          - No symlinks or non-regular filesystem objects are allowed.
+          - Release intentionally contains exactly two assets: ZIP + SHA256.
           EOF
           )"
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" \
-              "$VERSIONED_ZIP" "$VERSIONED_SHA" "$LATEST_ZIP" "$LATEST_SHA" \
-              --clobber
+            while IFS= read -r asset; do
+              [[ -z "$asset" ]] && continue
+              if [[ "$asset" != "$ZIP_NAME" && "$asset" != "$SHA_NAME" ]]; then
+                gh release delete-asset "$RELEASE_TAG" "$asset" -y
+              fi
+            done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+
+            gh release upload "$RELEASE_TAG" "$VERSIONED_ZIP" "$VERSIONED_SHA" --clobber
             gh release edit "$RELEASE_TAG" \
               --title "qBittorrent ${QBT_VERSION} Classic ${CLASSIC_VERSION}" \
               --notes "$NOTES" \
               --latest
           else
-            gh release create "$RELEASE_TAG" \
-              "$VERSIONED_ZIP" "$VERSIONED_SHA" "$LATEST_ZIP" "$LATEST_SHA" \
+            gh release create "$RELEASE_TAG" "$VERSIONED_ZIP" "$VERSIONED_SHA" \
               --title "qBittorrent ${QBT_VERSION} Classic ${CLASSIC_VERSION}" \
               --notes "$NOTES" \
               --latest
