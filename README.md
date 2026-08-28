@@ -1,136 +1,147 @@
 # qBittorrent Classic WebUI
 
-Official qBittorrent WebUI functionality with a visual-only Classic layer inspired by the compact qBittorrent 4.4.5 WebUI.
+## 中文
 
-## Architecture
+### 为什么做这个工作流
 
-```text
-qBittorrent official stable release
-        ↓
-GitHub Actions
-        ↓
-copy official public/ + private/
-compile official WebUI translations (.ts → .qm)
-        ↓
-inject classic/classic.css
-        ↓
-validate regular files / no symlinks
-        ↓
-GitHub Release
-        ↓
-extract into ./config/classic-webui
-        ↓
-qBittorrent RootFolder=/config/classic-webui
-```
+一直不喜欢新版 qBittorrent WebUI 的颜色：太亮、太艳，长时间看有点晃眼。
 
-## Repository files
+更喜欢以前偏灰度、低饱和、紧凑的界面，所以做了这个工作流，把新版 qBittorrent 的官方 WebUI 保留下来，只覆盖视觉样式，尽量找回以前的感觉。
+
+- 功能、WebAPI、页面逻辑：来自对应版本的 qBittorrent 官方 WebUI
+- Classic：只修改 CSS 视觉样式
+- GitHub Actions：自动跟随 qBittorrent 官方稳定版构建 Release
+
+### 安装
+
+1. 在 **Releases** 下载：
 
 ```text
-classic/classic.css
-classic/VERSION
-scripts/build.sh
-scripts/update-nas.sh
-.github/workflows/build-release.yml
+classic-webui-qbX.Y.Z.zip
 ```
 
-## Build triggers
+2. 找到宿主机中**映射到容器 `/config` 的目录**，直接把 ZIP 解压到这个目录。
 
-The Release workflow runs in three cases:
-
-- Pushes that change the Classic visual layer, build script, or workflow.
-- Manual **Actions → Build and release Classic WebUI → Run workflow**.
-- Daily scheduled check for a new official qBittorrent stable release.
-
-If a matching `qBittorrent version + Classic version` Release already exists with the expected two assets, scheduled runs skip rebuilding it.
-
-The workflow uses the repository's built-in `GITHUB_TOKEN` and declares:
-
-```yaml
-permissions:
-  contents: write
-```
-
-## Release assets
-
-Each Release intentionally contains exactly two files:
-
-```text
-classic-webui-qb5.2.3-classic-v2.zip
-classic-webui-qb5.2.3-classic-v2.zip.sha256
-```
-
-The ZIP contains one top-level directory so manual extraction does not scatter files into `config/`:
+解压后应为：
 
 ```text
 classic-webui/
 ├── public/
 ├── private/
 ├── translations/
-├── BUILD-INFO.txt
-└── LICENSE.qBittorrent
+└── COPYING
 ```
 
-There is no duplicated `latest.zip`. The NAS updater reads the latest GitHub Release metadata and automatically discovers the current versioned ZIP and matching SHA256 file.
-
-## Docker Compose
-
-No extra WebUI bind mount is required. Keep only the normal qBittorrent mounts:
+如果你的 Docker 配置类似：
 
 ```yaml
 volumes:
   - ./config:/config
-  - ./downloads:/downloads
 ```
 
-Place/extract Classic WebUI at:
+那么最终目录就是：
 
 ```text
 ./config/classic-webui
 ```
 
-qBittorrent WebUI setting:
+**不需要额外增加 WebUI volume 映射。**
+
+3. 打开 qBittorrent：
 
 ```text
-Use alternative WebUI: enabled
-Files location: /config/classic-webui
+工具 → 选项 → Web UI
 ```
 
-## Display density
-
-Classic V2 preserves qBittorrent 5.2.x **Display density** behavior.
-
-- `Default`: current Classic spacing.
-- `Compact`: tighter body line-height, torrent rows, filters, toolbar and tabs.
-
-The theme no longer hard-codes one density for both settings.
-
-## NAS update
-
-Run from the qBittorrent Compose directory.
-
-For a public GitHub repository:
-
-```bash
-sh /path/to/update-nas.sh juzijia/qbittorrent-classic-webui
-```
-
-For a private GitHub repository, provide a fine-grained token with **Contents: Read-only** access to this repository:
-
-```bash
-GH_TOKEN='YOUR_FINE_GRAINED_TOKEN' \
-  sh /path/to/update-nas.sh juzijia/qbittorrent-classic-webui
-```
-
-Do not hard-code the token inside the script or Compose file.
-
-The updater resolves the latest versioned Release asset, verifies SHA256 and required files, rejects symlinks/non-regular filesystem objects, briefly stops qBittorrent, replaces `./config/classic-webui`, and starts qBittorrent again. If startup fails, it rolls back the previous WebUI directory.
-
-## Classic visual version
-
-Change `classic/VERSION` when the visual layer or package contract changes:
+启用：
 
 ```text
-v1
-v2
-...
+使用备选 WebUI
+```
+
+文件位置填写：
+
+```text
+/config/classic-webui
+```
+
+4. 保存设置，刷新浏览器即可。
+
+### 更新
+
+以后下载新的 Release，直接用新的 `classic-webui` 文件夹替换旧目录即可。qBittorrent 里的路径保持：
+
+```text
+/config/classic-webui
+```
+
+---
+
+## English
+
+### Why this workflow
+
+I never liked the newer qBittorrent WebUI colors — they are brighter and more saturated than the older interface.
+
+This project keeps the official qBittorrent WebUI and only applies a Classic CSS layer to bring back a lower-saturation, gray and compact look.
+
+- Functionality, WebAPI and page logic: official qBittorrent WebUI
+- Classic layer: CSS-only visual changes
+- GitHub Actions: automatically builds releases from the latest stable qBittorrent release
+
+### Installation
+
+1. Download from **Releases**:
+
+```text
+classic-webui-qbX.Y.Z.zip
+```
+
+2. Extract it inside the host directory that is already mounted to `/config` in the qBittorrent container.
+
+The result should be:
+
+```text
+classic-webui/
+├── public/
+├── private/
+├── translations/
+└── COPYING
+```
+
+Example Docker mapping:
+
+```yaml
+volumes:
+  - ./config:/config
+```
+
+Result:
+
+```text
+./config/classic-webui
+```
+
+No additional WebUI volume mount is required.
+
+3. In qBittorrent open:
+
+```text
+Tools → Options → Web UI
+```
+
+Enable **Use alternative WebUI** and set the files location to:
+
+```text
+/config/classic-webui
+```
+
+4. Save and refresh the browser.
+
+### Updating
+
+Replace the existing `classic-webui` directory with the one from the newest Release. Keep the qBittorrent path unchanged:
+
+```text
+/config/classic-webui
 ```
