@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "classic/**"
+      - "classic/classic.css"
       - "scripts/build.sh"
       - ".github/workflows/build-release.yml"
 
@@ -39,7 +39,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Resolve qBittorrent and Classic versions
+      - name: Resolve qBittorrent version
         id: meta
         env:
           GH_TOKEN: ${{ github.token }}
@@ -63,12 +63,13 @@ jobs:
           gh api "repos/qbittorrent/qBittorrent/git/ref/tags/${QBT_TAG}" >/dev/null
 
           QBT_VERSION="${QBT_TAG#release-}"
-          CLASSIC_VERSION="$(tr -d '[:space:]' < classic/VERSION)"
-          RELEASE_TAG="qb-${QBT_VERSION}-classic-${CLASSIC_VERSION}"
-          EXPECTED_ZIP="classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
+          RELEASE_TAG="qb-${QBT_VERSION}-classic"
+          EXPECTED_ZIP="classic-webui-qb${QBT_VERSION}.zip"
           EXPECTED_SHA="${EXPECTED_ZIP}.sha256"
 
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            BUILD_NEEDED=true
+          elif gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             if [[ "${FORCE_REBUILD:-false}" == "true" ]]; then
               BUILD_NEEDED=true
             else
@@ -89,13 +90,11 @@ jobs:
           {
             echo "qb_tag=$QBT_TAG"
             echo "qb_version=$QBT_VERSION"
-            echo "classic_version=$CLASSIC_VERSION"
             echo "release_tag=$RELEASE_TAG"
             echo "build_needed=$BUILD_NEEDED"
           } >> "$GITHUB_OUTPUT"
 
           echo "Upstream: $QBT_TAG"
-          echo "Classic:  $CLASSIC_VERSION"
           echo "Release:  $RELEASE_TAG"
           echo "Build:    $BUILD_NEEDED"
 
@@ -113,9 +112,7 @@ jobs:
         if: steps.meta.outputs.build_needed == 'true'
         run: |
           chmod +x scripts/build.sh
-          scripts/build.sh \
-            "${{ steps.meta.outputs.qb_tag }}" \
-            "${{ steps.meta.outputs.classic_version }}"
+          scripts/build.sh "${{ steps.meta.outputs.qb_tag }}"
 
       - name: Publish GitHub Release
         if: steps.meta.outputs.build_needed == 'true'
@@ -123,25 +120,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ steps.meta.outputs.release_tag }}
           QBT_VERSION: ${{ steps.meta.outputs.qb_version }}
-          CLASSIC_VERSION: ${{ steps.meta.outputs.classic_version }}
         shell: bash
         run: |
           set -euo pipefail
 
-          VERSIONED_ZIP="dist/classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
+          VERSIONED_ZIP="dist/classic-webui-qb${QBT_VERSION}.zip"
           VERSIONED_SHA="${VERSIONED_ZIP}.sha256"
           ZIP_NAME="$(basename "$VERSIONED_ZIP")"
           SHA_NAME="$(basename "$VERSIONED_SHA")"
 
           NOTES="$(cat <<EOF
-          qBittorrent ${QBT_VERSION} + Classic ${CLASSIC_VERSION}
+          qBittorrent ${QBT_VERSION} Classic WebUI
 
-          - Upstream HTML / JavaScript / WebAPI are from the official qBittorrent release.
-          - Classic changes are visual CSS only.
-          - Official WebUI translations are compiled to .qm, including zh_CN.
-          - ZIP contains one top-level classic-webui/ directory for direct extraction into config/.
-          - Recommended Alternate WebUI root: /config/classic-webui.
-          - Release intentionally contains exactly two assets: ZIP + SHA256.
+          - Based on the official qBittorrent WebUI for this release.
+          - Visual CSS changes only; WebUI functionality and WebAPI stay upstream.
+          - ZIP contains one top-level classic-webui/ directory.
+          - Recommended Alternate WebUI path: /config/classic-webui.
+          - Release contains exactly two assets: ZIP + SHA256.
           EOF
           )"
 
@@ -155,12 +150,12 @@ jobs:
 
             gh release upload "$RELEASE_TAG" "$VERSIONED_ZIP" "$VERSIONED_SHA" --clobber
             gh release edit "$RELEASE_TAG" \
-              --title "qBittorrent ${QBT_VERSION} Classic ${CLASSIC_VERSION}" \
+              --title "qBittorrent ${QBT_VERSION} Classic" \
               --notes "$NOTES" \
               --latest
           else
             gh release create "$RELEASE_TAG" "$VERSIONED_ZIP" "$VERSIONED_SHA" \
-              --title "qBittorrent ${QBT_VERSION} Classic ${CLASSIC_VERSION}" \
+              --title "qBittorrent ${QBT_VERSION} Classic" \
               --notes "$NOTES" \
               --latest
           fi
