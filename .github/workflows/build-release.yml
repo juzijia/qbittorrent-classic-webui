@@ -1,6 +1,14 @@
 name: Build and release Classic WebUI
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "classic/**"
+      - "scripts/build.sh"
+      - ".github/workflows/build-release.yml"
+
   workflow_dispatch:
     inputs:
       qb_tag:
