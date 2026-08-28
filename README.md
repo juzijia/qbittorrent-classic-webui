@@ -1,18 +1,30 @@
 # qBittorrent Classic WebUI
 
-## 中文
+[English](README_EN.md)
 
-### 为什么做这个工作流
+## 前言
 
 一直不喜欢新版 qBittorrent WebUI 的颜色：太亮、太艳，长时间看有点晃眼。
 
-更喜欢以前偏灰度、低饱和、紧凑的界面，所以做了这个工作流：保留新版 qBittorrent 官方 WebUI，只覆盖视觉样式，尽量找回以前的感觉。
+更喜欢以前偏灰度、低饱和的界面，也怀念旧版那种简单、紧凑的感觉，所以做了这个工作流。
 
-- 功能、WebAPI、页面逻辑：来自对应版本的 qBittorrent 官方 WebUI
-- Classic：只修改 CSS 视觉样式
-- GitHub Actions：自动跟随 qBittorrent 官方稳定版构建 Release
+这个项目**不重写 qBittorrent WebUI**：功能、WebAPI 和页面逻辑全部来自对应版本的 qBittorrent 官方 WebUI，只额外覆盖 Classic CSS 视觉样式。
 
-### 安装
+qBittorrent **5.2.0 起**，官方 WebUI 加入了提高显示密度（Display density）的选项。Classic WebUI 保留这一官方行为：默认仍是默认密度，需要更高信息密度时再切换到紧凑模式。
+
+GitHub Actions 会跟随 qBittorrent 官方稳定版自动构建 Release。
+
+## 预览
+
+### 默认
+
+![Default](docs/screenshots/default.webp)
+
+### 紧凑（qBittorrent 5.2.0+）
+
+![Compact](docs/screenshots/compact.webp)
+
+## 安装
 
 1. 在 **Releases** 下载：
 
@@ -20,9 +32,7 @@
 classic-webui.zip
 ```
 
-2. 找到宿主机中**映射到容器 `/config` 的目录**。
-
-NAS 文件管理器通常会按压缩包名创建文件夹。把 `classic-webui.zip` 解压到该目录后，应得到：
+2. 找到宿主机中已经映射到容器 `/config` 的目录，把压缩包解压为：
 
 ```text
 classic-webui/
@@ -32,26 +42,26 @@ classic-webui/
 └── COPYING
 ```
 
-如果使用命令行，请明确解压到 `classic-webui` 目录：
-
-```bash
-unzip classic-webui.zip -d ./classic-webui
-```
-
-例如 Docker 已有：
+例如 Docker 中已有：
 
 ```yaml
 volumes:
   - ./config:/config
 ```
 
-最终宿主机目录应为：
+那么宿主机最终目录应为：
 
 ```text
 ./config/classic-webui
 ```
 
-**不需要额外增加 WebUI volume 映射。**
+不需要增加额外的 WebUI volume 映射。
+
+命令行解压可直接使用：
+
+```bash
+unzip classic-webui.zip -d ./classic-webui
+```
 
 3. 打开 qBittorrent：
 
@@ -65,89 +75,21 @@ volumes:
 /config/classic-webui
 ```
 
-4. 保存并刷新浏览器。
+4. 保存设置并刷新浏览器。
 
-### 更新
+## 更新
 
-下载新 Release，用新的 `classic-webui` 目录替换旧目录即可。qBittorrent 里的路径保持不变：
+下载新的 Release，用新的 `classic-webui` 目录替换旧目录即可。
 
-```text
-/config/classic-webui
-```
-
----
-
-## English
-
-### Why this workflow
-
-I never liked the newer qBittorrent WebUI colors — they are brighter and more saturated than the older interface.
-
-This project keeps the official qBittorrent WebUI and only applies a Classic CSS layer to bring back a lower-saturation, gray and compact look.
-
-- Functionality, WebAPI and page logic: official qBittorrent WebUI
-- Classic layer: CSS-only visual changes
-- GitHub Actions: automatically builds releases from the latest stable qBittorrent release
-
-### Installation
-
-1. Download from **Releases**:
-
-```text
-classic-webui.zip
-```
-
-2. Locate the host directory already mounted to `/config` in the qBittorrent container.
-
-Most NAS file managers create a directory from the archive name automatically. After extraction, the result should be:
-
-```text
-classic-webui/
-├── public/
-├── private/
-├── translations/
-└── COPYING
-```
-
-For command-line extraction, explicitly extract into the `classic-webui` directory:
-
-```bash
-unzip classic-webui.zip -d ./classic-webui
-```
-
-Example Docker mapping:
-
-```yaml
-volumes:
-  - ./config:/config
-```
-
-Final host path:
-
-```text
-./config/classic-webui
-```
-
-No additional WebUI volume mount is required.
-
-3. In qBittorrent open:
-
-```text
-Tools → Options → Web UI
-```
-
-Enable **Use alternative WebUI** and set the files location to:
+qBittorrent 中的路径始终保持：
 
 ```text
 /config/classic-webui
 ```
 
-4. Save and refresh the browser.
+## 说明
 
-### Updating
-
-Replace the existing `classic-webui` directory with the one from the newest Release. Keep the qBittorrent path unchanged:
-
-```text
-/config/classic-webui
-```
+- 官方功能、WebAPI、HTML / JavaScript：来自对应版本 qBittorrent。
+- Classic：仅修改视觉 CSS。
+- qBittorrent 5.2.0+ 支持官方显示密度设置，默认和紧凑模式均保留。
+- Release 内附 `COPYING`。
