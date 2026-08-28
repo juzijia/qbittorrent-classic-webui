@@ -17,12 +17,13 @@ fi
 
 QBT_VERSION="${QBT_TAG#release-}"
 WORK_DIR="$ROOT_DIR/.work"
-BUILD_DIR="$ROOT_DIR/build/classic-webui"
+BUILD_ROOT="$ROOT_DIR/build"
+BUILD_DIR="$BUILD_ROOT/classic-webui"
 DIST_DIR="$ROOT_DIR/dist"
 ARCHIVE="$WORK_DIR/qbittorrent-${QBT_TAG}.tar.gz"
 SOURCE_DIR="$WORK_DIR/source"
 
-rm -rf "$WORK_DIR" "$ROOT_DIR/build" "$DIST_DIR"
+rm -rf "$WORK_DIR" "$BUILD_ROOT" "$DIST_DIR"
 mkdir -p "$WORK_DIR" "$SOURCE_DIR" "$BUILD_DIR" "$DIST_DIR"
 
 cleanup() {
@@ -119,6 +120,7 @@ qBittorrent version: ${QBT_VERSION}
 Classic version: ${CLASSIC_VERSION}
 Upstream source: https://github.com/qbittorrent/qBittorrent/tree/${QBT_TAG}
 Build type: official WebUI + visual-only Classic CSS overlay
+Expected qBittorrent Alternate WebUI path in Docker: /config/classic-webui
 EOF
 
 echo "==> Validate package"
@@ -151,10 +153,10 @@ fi
 
 VERSIONED_ZIP="$DIST_DIR/classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
 
-echo "==> Package"
+echo "==> Package with top-level classic-webui/ directory"
 (
-    cd "$BUILD_DIR"
-    zip -qr "$VERSIONED_ZIP" .
+    cd "$BUILD_ROOT"
+    zip -qr "$VERSIONED_ZIP" classic-webui
 )
 
 (
