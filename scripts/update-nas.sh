@@ -9,11 +9,13 @@ set -eu
 #     GH_TOKEN='fine-grained-token-with-Contents-read' \
 #       sh /path/to/update-nas.sh OWNER/REPO
 #
-# Default target matches:
-#   - ./classic-webui:/webui:ro
+# Default layout:
+#   ./config:/config
+#   ./downloads:/downloads
+#   Alternate WebUI root: /config/classic-webui
 
 REPO="${1:-${REPO:-}}"
-TARGET="${TARGET:-./classic-webui}"
+TARGET="${TARGET:-./config/classic-webui}"
 CONTAINER="${CONTAINER:-qbittorrent}"
 
 if [ -z "$REPO" ]; then
@@ -28,7 +30,8 @@ command -v python3 >/dev/null 2>&1 || { echo "ERROR: python3 required"; exit 1; 
 
 TMP="${TMPDIR:-/tmp}/qb-classic-update.$$"
 RELEASE_JSON="$TMP/release.json"
-NEW="$TMP/new"
+EXTRACT_ROOT="$TMP/extract"
+PACKAGE_DIR="$EXTRACT_ROOT/classic-webui"
 BACKUP="${TARGET}.backup"
 
 cleanup() {
@@ -36,7 +39,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$TMP" "$NEW"
+mkdir -p "$TMP" "$EXTRACT_ROOT"
 
 echo "==> Resolve latest Release"
 if [ -n "${GH_TOKEN:-}" ]; then
@@ -121,26 +124,27 @@ echo "==> Verify SHA256"
 )
 
 echo "==> Extract and validate"
-unzip -q "$ZIP" -d "$NEW"
+unzip -q "$ZIP" -d "$EXTRACT_ROOT"
 
 for f in \
-    "$NEW/public/index.html" \
-    "$NEW/private/index.html" \
-    "$NEW/private/css/classic.css" \
-    "$NEW/translations/webui_zh_CN.qm"
+    "$PACKAGE_DIR/public/index.html" \
+    "$PACKAGE_DIR/private/index.html" \
+    "$PACKAGE_DIR/private/css/classic.css" \
+    "$PACKAGE_DIR/translations/webui_zh_CN.qm"
 do
     [ -f "$f" ] || { echo "ERROR: missing regular file: $f"; exit 1; }
 done
 
-if find "$NEW" -type l -print -quit | grep -q .; then
+if find "$PACKAGE_DIR" -type l -print -quit | grep -q .; then
     echo "ERROR: release contains symlink(s)"
     exit 1
 fi
 
-BAD_TYPE="$(find "$NEW" ! -type f ! -type d -print -quit)"
+BAD_TYPE="$(find "$PACKAGE_DIR" ! -type f ! -type d -print -quit)"
 [ -z "$BAD_TYPE" ] || { echo "ERROR: unacceptable file type: $BAD_TYPE"; exit 1; }
 
 echo "==> Replace $TARGET"
+mkdir -p "$(dirname "$TARGET")"
 
 WAS_RUNNING=false
 if docker inspect "$CONTAINER" >/dev/null 2>&1; then
@@ -155,7 +159,7 @@ if [ -e "$TARGET" ]; then
     mv "$TARGET" "$BACKUP"
 fi
 
-mv "$NEW" "$TARGET"
+mv "$PACKAGE_DIR" "$TARGET"
 
 if [ "$WAS_RUNNING" = "true" ]; then
     if ! docker start "$CONTAINER" >/dev/null; then
@@ -175,4 +179,4 @@ echo
 echo "UPDATE_OK"
 echo "Installed: $ZIP_NAME"
 echo "Target: $TARGET"
-echo "WebUI root in qBittorrent should remain: /webui"
+echo "qBittorrent Alternate WebUI root: /config/classic-webui"
