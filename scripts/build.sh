@@ -54,8 +54,6 @@ echo "==> Copy official WebUI"
 cp -a "$WWW/private" "$BUILD_DIR/"
 cp -a "$WWW/public" "$BUILD_DIR/"
 
-# qBittorrent loads Alternate WebUI translations from:
-# <RootFolder>/translations/webui_<locale>.qm
 echo "==> Compile official WebUI translations (.ts -> .qm)"
 if command -v lrelease >/dev/null 2>&1; then
     LRELEASE="$(command -v lrelease)"
@@ -152,19 +150,16 @@ if [[ -n "$BAD_TYPE" ]]; then
 fi
 
 VERSIONED_ZIP="$DIST_DIR/classic-webui-qb${QBT_VERSION}-classic-${CLASSIC_VERSION}.zip"
-LATEST_ZIP="$DIST_DIR/classic-webui-latest.zip"
 
 echo "==> Package"
 (
     cd "$BUILD_DIR"
     zip -qr "$VERSIONED_ZIP" .
 )
-cp "$VERSIONED_ZIP" "$LATEST_ZIP"
 
 (
     cd "$DIST_DIR"
     sha256sum "$(basename "$VERSIONED_ZIP")" > "$(basename "$VERSIONED_ZIP").sha256"
-    sha256sum "$(basename "$LATEST_ZIP")" > "$(basename "$LATEST_ZIP").sha256"
 )
 
 echo
