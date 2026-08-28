@@ -1,0 +1,7 @@
+This repository's custom Classic CSS and automation files are provided under the
+GNU General Public License v2.0 or later (GPL-2.0-or-later), to align with the
+qBittorrent project.
+
+Generated Release artifacts contain upstream qBittorrent WebUI files. The build
+process copies qBittorrent's own COPYING file into each generated artifact as
+LICENSE.qBittorrent.
