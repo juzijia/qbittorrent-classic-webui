@@ -28,8 +28,7 @@ command -v python3 >/dev/null 2>&1 || { echo "ERROR: python3 required"; exit 1; 
 
 TMP="${TMPDIR:-/tmp}/qb-classic-update.$$"
 RELEASE_JSON="$TMP/release.json"
-EXTRACT_ROOT="$TMP/extract"
-PACKAGE_DIR="$EXTRACT_ROOT/classic-webui"
+PACKAGE_DIR="$TMP/classic-webui"
 BACKUP="${TARGET}.backup"
 
 cleanup() {
@@ -37,7 +36,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$TMP" "$EXTRACT_ROOT"
+mkdir -p "$TMP" "$PACKAGE_DIR"
 
 echo "==> Resolve latest Release"
 if [ -n "${GH_TOKEN:-}" ]; then
@@ -56,43 +55,37 @@ else
 fi
 
 ASSET_META="$(python3 - "$RELEASE_JSON" <<'PY'
-import json, re, sys
+import json, sys
 
 with open(sys.argv[1], "r", encoding="utf-8") as f:
     release = json.load(f)
 
 assets = release.get("assets", [])
-zips = [a for a in assets if re.fullmatch(r"classic-webui-qb[^/]+\.zip", a.get("name", ""))]
-if len(zips) != 1:
-    raise SystemExit(f"ERROR: expected exactly one Classic WebUI ZIP asset, found {len(zips)}")
+by_name = {a.get("name"): a for a in assets}
+zip_asset = by_name.get("classic-webui.zip")
+sha_asset = by_name.get("classic-webui.zip.sha256")
 
-zip_asset = zips[0]
-sha_name = zip_asset["name"] + ".sha256"
-sha_assets = [a for a in assets if a.get("name") == sha_name]
-if len(sha_assets) != 1:
-    raise SystemExit(f"ERROR: expected SHA256 asset: {sha_name}")
-sha_asset = sha_assets[0]
+if not zip_asset:
+    raise SystemExit("ERROR: classic-webui.zip not found in latest Release")
+if not sha_asset:
+    raise SystemExit("ERROR: classic-webui.zip.sha256 not found in latest Release")
 
-print(zip_asset["name"])
 print(zip_asset["url"])
 print(zip_asset["browser_download_url"])
-print(sha_asset["name"])
 print(sha_asset["url"])
 print(sha_asset["browser_download_url"])
 PY
 )"
 
-ZIP_NAME="$(printf '%s\n' "$ASSET_META" | sed -n '1p')"
-ZIP_API_URL="$(printf '%s\n' "$ASSET_META" | sed -n '2p')"
-ZIP_BROWSER_URL="$(printf '%s\n' "$ASSET_META" | sed -n '3p')"
-SHA_NAME="$(printf '%s\n' "$ASSET_META" | sed -n '4p')"
-SHA_API_URL="$(printf '%s\n' "$ASSET_META" | sed -n '5p')"
-SHA_BROWSER_URL="$(printf '%s\n' "$ASSET_META" | sed -n '6p')"
+ZIP_API_URL="$(printf '%s\n' "$ASSET_META" | sed -n '1p')"
+ZIP_BROWSER_URL="$(printf '%s\n' "$ASSET_META" | sed -n '2p')"
+SHA_API_URL="$(printf '%s\n' "$ASSET_META" | sed -n '3p')"
+SHA_BROWSER_URL="$(printf '%s\n' "$ASSET_META" | sed -n '4p')"
 
-ZIP="$TMP/$ZIP_NAME"
-SHA="$TMP/$SHA_NAME"
+ZIP="$TMP/classic-webui.zip"
+SHA="$TMP/classic-webui.zip.sha256"
 
-echo "==> Download $ZIP_NAME"
+echo "==> Download classic-webui.zip"
 if [ -n "${GH_TOKEN:-}" ]; then
     curl -fL --retry 3 \
         -H "Accept: application/octet-stream" \
@@ -113,11 +106,11 @@ fi
 echo "==> Verify SHA256"
 (
     cd "$TMP"
-    sha256sum -c "$SHA_NAME"
+    sha256sum -c "classic-webui.zip.sha256"
 )
 
 echo "==> Extract and validate"
-unzip -q "$ZIP" -d "$EXTRACT_ROOT"
+unzip -q "$ZIP" -d "$PACKAGE_DIR"
 
 for f in \
     "$PACKAGE_DIR/public/index.html" \
@@ -171,6 +164,5 @@ rm -rf "$BACKUP"
 
 echo
 echo "UPDATE_OK"
-echo "Installed: $ZIP_NAME"
 echo "Target: $TARGET"
 echo "qBittorrent Alternate WebUI path: /config/classic-webui"
