@@ -1,0 +1,254 @@
+/*
+ * qBittorrent Classic WebUI
+ * Visual overlay for the official qBittorrent WebUI.
+ * Functional HTML / JS / WebAPI remain upstream.
+ *
+ * Classic V1 finalized from qBittorrent 4.4.5 visual language:
+ * - compact desktop density
+ * - dark blue selection
+ * - neutral gray headers and borders
+ * - low-saturation semantic icons
+ * - classic neutral tabs
+ */
+
+:root:not(.dark) {
+    --color-accent-blue: #415a8d;
+    --color-text-blue: #355b83;
+    --color-text-orange: #cc6500;
+    --color-text-red: #c73232;
+    --color-text-green: #367a32;
+    --color-text-white: #fff;
+    --color-text-disabled: #8c8c8c;
+    --color-text-default: #555;
+    --color-background-primary: #fff;
+    --color-background-blue: #415a8d;
+    --color-background-popup: #fff;
+    --color-background-default: #eee;
+    --color-background-hover: #e66a16;
+    --color-border-blue: #415a8d;
+    --color-border-default: #ccc;
+}
+
+:root:not(.dark) body {
+    background: #fff;
+    color: #555;
+    font-family: Arial, "Microsoft YaHei", "Microsoft JhengHei", Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+:root:not(.dark) #desktopNavbar {
+    background: #f1f1f1;
+    border-bottom: 1px solid #c7c7c7;
+}
+
+:root:not(.dark) #desktopNavbar ul li a {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+:root:not(.dark) #mochaToolbar {
+    background: #fafafa;
+    border-bottom: 1px solid #c7c7c7;
+    height: 29px !important;
+    margin-top: 0 !important;
+    padding-top: 3px;
+}
+
+:root:not(.dark) #mochaToolbar .mochaToolButton {
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 7px;
+    filter: saturate(55%) brightness(78%) contrast(108%);
+}
+
+:root:not(.dark) #topPrioButton img,
+:root:not(.dark) #increasePrioButton img,
+:root:not(.dark) #decreasePrioButton img,
+:root:not(.dark) #bottomPrioButton img,
+:root:not(.dark) #preferencesButton img {
+    filter: grayscale(45%) saturate(52%) brightness(72%) contrast(112%);
+}
+
+:root:not(.dark) #uploadButton img,
+:root:not(.dark) #downloadButton img,
+:root:not(.dark) #deleteButton img,
+:root:not(.dark) #startButton img,
+:root:not(.dark) #stopButton img {
+    filter: saturate(58%) brightness(80%) contrast(108%);
+}
+
+:root:not(.dark) .filterTitle {
+    color: #444;
+    padding: 3px 0 2px 5px;
+}
+
+:root:not(.dark) ul.filterList span.link {
+    min-height: 20px;
+    padding: 2px 4px;
+}
+
+:root:not(.dark) .selectedFilter > span.link {
+    background: #415a8d !important;
+    color: #fff !important;
+}
+
+:root:not(.dark) ul.filterList span.link:hover {
+    background: #e66a16 !important;
+    color: #fff !important;
+}
+
+:root:not(.dark) #Filters ul img,
+:root:not(.dark) ul.filterList .selectedFilter > .link img,
+:root:not(.dark) ul.filterList span.link:hover img {
+    filter: saturate(62%) brightness(86%) contrast(105%) !important;
+    opacity: 1 !important;
+}
+
+:root:not(.dark) .dynamicTable th {
+    background: #eee !important;
+    border-bottom: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    color: #444;
+    font-weight: normal;
+    padding: 3px 4px !important;
+}
+
+:root:not(.dark) #transferList .dynamicTable td {
+    height: 20px;
+    line-height: 18px;
+    padding: 0 4px !important;
+}
+
+:root:not(.dark) .dynamicTableDiv table.dynamicTable tbody tr.selected {
+    background: #354158 !important;
+    color: #fff !important;
+}
+
+:root:not(.dark) .dynamicTableDiv table.dynamicTable tbody tr:hover {
+    background: #e66a16 !important;
+    color: #fff !important;
+}
+
+:root:not(.dark) .altRowColors tbody tr:nth-child(odd of :not(.invisible)) {
+    background: #f3f3f3;
+}
+
+:root:not(.dark) #transferList .stateIcon,
+:root:not(.dark) #torrentCreatorContentView .stateIcon {
+    filter: saturate(62%) brightness(88%) contrast(105%);
+}
+
+:root:not(.dark) #properties {
+    background: #e5e5e5;
+}
+
+:root:not(.dark) #propertiesPanel_header {
+    background: #e9e9e9;
+    border-bottom: 1px solid #bcbcbc;
+    height: 27px;
+}
+
+:root:not(.dark) #propertiesPanel .panel,
+:root:not(.dark) #propertiesPanel .dynamicTableFixedHeaderDiv {
+    border-color: #ccc;
+}
+
+:root:not(.dark) .tab-menu {
+    line-height: 16px;
+}
+
+:root:not(.dark) .tab-menu li a {
+    background: linear-gradient(#f8f8f8, #dedede) !important;
+    border: 1px solid #aaa;
+    border-bottom-color: #bcbcbc;
+    border-radius: 3px 3px 0 0 !important;
+    color: #333 !important;
+    gap: 4px;
+    margin-left: 3px;
+    padding: 4px 9px 3px !important;
+}
+
+:root:not(.dark) .tab-menu li:first-child a {
+    margin-left: 3px;
+}
+
+:root:not(.dark) .tab-menu li.selected a {
+    background: #f8f8f8 !important;
+    border-bottom-color: #f8f8f8;
+    color: #181818 !important;
+    font-weight: bold;
+}
+
+:root:not(.dark) .tab-menu li:hover a {
+    background: #e7e7e7 !important;
+    color: #181818 !important;
+}
+
+:root:not(.dark) .tab-menu .selected img,
+:root:not(.dark) .tab-menu li:hover img {
+    filter: saturate(55%) brightness(78%) !important;
+}
+
+:root:not(.dark) input[type="search"],
+:root:not(.dark) input[type="text"],
+:root:not(.dark) input[type="number"],
+:root:not(.dark) input[type="password"],
+:root:not(.dark) input[type="button"],
+:root:not(.dark) button,
+:root:not(.dark) textarea,
+:root:not(.dark) select {
+    border-color: #bbb;
+    border-radius: 1px !important;
+    box-shadow: none !important;
+}
+
+:root:not(.dark) #torrentsFilterInput {
+    background-color: #fff;
+    border-color: #bbb;
+    border-radius: 1px !important;
+    min-width: 170px;
+}
+
+:root:not(.dark) .contextMenu,
+:root:not(.dark) #desktopNavbar li ul {
+    background: #eee;
+    border-color: #999;
+    box-shadow: none;
+}
+
+:root:not(.dark) .contextMenu li a:hover,
+:root:not(.dark) #desktopNavbar li ul li a:hover,
+:root:not(.dark) #desktopNavbar li ul li div.anchor:hover {
+    background: #ddd !important;
+    color: #111 !important;
+}
+
+:root:not(.dark) .contextMenu li a:hover img,
+:root:not(.dark) #desktopNavbar a:hover img {
+    filter: saturate(55%) brightness(78%) !important;
+}
+
+:root:not(.dark) #pageWrapper,
+:root:not(.dark) .panel,
+:root:not(.dark) .panel-header,
+:root:not(.dark) .columnHandle {
+    border-color: #ccc;
+}
+
+:root:not(.dark) .horizontalHandle {
+    background: #eee;
+}
+
+:root:not(.dark) fieldset,
+:root:not(.dark) .mocha,
+:root:not(.dark) .mochaContent,
+:root:not(.dark) .mochaTitlebar {
+    box-shadow: none !important;
+}
+
+:root:not(.dark) img.flags,
+:root:not(.dark) span.flags {
+    filter: none !important;
+    opacity: 1 !important;
+}
