@@ -64,8 +64,8 @@ jobs:
 
           QBT_VERSION="${QBT_TAG#release-}"
           RELEASE_TAG="qb-${QBT_VERSION}-classic"
-          EXPECTED_ZIP="classic-webui-qb${QBT_VERSION}.zip"
-          EXPECTED_SHA="${EXPECTED_ZIP}.sha256"
+          EXPECTED_ZIP="classic-webui.zip"
+          EXPECTED_SHA="classic-webui.zip.sha256"
 
           if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
             BUILD_NEEDED=true
@@ -140,17 +140,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          VERSIONED_ZIP="dist/classic-webui-qb${QBT_VERSION}.zip"
-          VERSIONED_SHA="${VERSIONED_ZIP}.sha256"
-          ZIP_NAME="$(basename "$VERSIONED_ZIP")"
-          SHA_NAME="$(basename "$VERSIONED_SHA")"
+          ZIP="dist/classic-webui.zip"
+          SHA="dist/classic-webui.zip.sha256"
+          ZIP_NAME="classic-webui.zip"
+          SHA_NAME="classic-webui.zip.sha256"
 
           NOTES="$(cat <<EOF
           qBittorrent ${QBT_VERSION} Classic WebUI
 
           - Based on the official qBittorrent WebUI for this release.
           - Visual CSS changes only; WebUI functionality and WebAPI stay upstream.
-          - ZIP contains one top-level classic-webui/ directory.
+          - Extract the archive as a directory named classic-webui inside the host path mounted to /config.
           - Recommended Alternate WebUI path: /config/classic-webui.
           - Release contains exactly two assets: ZIP + SHA256.
           EOF
@@ -164,13 +164,13 @@ jobs:
               fi
             done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
 
-            gh release upload "$RELEASE_TAG" "$VERSIONED_ZIP" "$VERSIONED_SHA" --clobber
+            gh release upload "$RELEASE_TAG" "$ZIP" "$SHA" --clobber
             gh release edit "$RELEASE_TAG" \
               --title "qBittorrent ${QBT_VERSION} Classic" \
               --notes "$NOTES" \
               --latest
           else
-            gh release create "$RELEASE_TAG" "$VERSIONED_ZIP" "$VERSIONED_SHA" \
+            gh release create "$RELEASE_TAG" "$ZIP" "$SHA" \
               --title "qBittorrent ${QBT_VERSION} Classic" \
               --notes "$NOTES" \
               --latest
