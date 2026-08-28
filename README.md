@@ -18,11 +18,11 @@ GitHub Actions 会跟随 qBittorrent 官方稳定版自动构建 Release。
 
 ### 默认
 
-![Default](docs/screenshots/default.webp)
+![Default](docs/screenshots/default.png)
 
 ### 紧凑（qBittorrent 5.2.0+）
 
-![Compact](docs/screenshots/compact.webp)
+![Compact](docs/screenshots/compact.png)
 
 ## 安装
 
