@@ -1,21 +1,19 @@
 #!/bin/sh
 set -eu
 
-# Usage (run from the qBittorrent Compose directory):
-#   Public repo:
+# Run from the host directory that is mounted to /config.
+# Default install target: ./classic-webui
+# qBittorrent Alternate WebUI path: /config/classic-webui
+#
+# Public repo:
+#   sh /path/to/update-nas.sh OWNER/REPO
+#
+# Private repo:
+#   GH_TOKEN='fine-grained-token-with-Contents-read' \
 #     sh /path/to/update-nas.sh OWNER/REPO
-#
-#   Private repo:
-#     GH_TOKEN='fine-grained-token-with-Contents-read' \
-#       sh /path/to/update-nas.sh OWNER/REPO
-#
-# Default layout:
-#   ./config:/config
-#   ./downloads:/downloads
-#   Alternate WebUI root: /config/classic-webui
 
 REPO="${1:-${REPO:-}}"
-TARGET="${TARGET:-./config/classic-webui}"
+TARGET="${TARGET:-./classic-webui}"
 CONTAINER="${CONTAINER:-qbittorrent}"
 
 if [ -z "$REPO" ]; then
@@ -43,7 +41,6 @@ mkdir -p "$TMP" "$EXTRACT_ROOT"
 
 echo "==> Resolve latest Release"
 if [ -n "${GH_TOKEN:-}" ]; then
-    echo "    Repository mode: authenticated/private"
     curl -fsSL --retry 3 \
         -H "Accept: application/vnd.github+json" \
         -H "Authorization: Bearer ${GH_TOKEN}" \
@@ -51,7 +48,6 @@ if [ -n "${GH_TOKEN:-}" ]; then
         "https://api.github.com/repos/${REPO}/releases/latest" \
         -o "$RELEASE_JSON"
 else
-    echo "    Repository mode: public/unauthenticated"
     curl -fsSL --retry 3 \
         -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -66,9 +62,9 @@ with open(sys.argv[1], "r", encoding="utf-8") as f:
     release = json.load(f)
 
 assets = release.get("assets", [])
-zips = [a for a in assets if re.fullmatch(r"classic-webui-qb.+-classic-.+\.zip", a.get("name", ""))]
+zips = [a for a in assets if re.fullmatch(r"classic-webui-qb[^/]+\.zip", a.get("name", ""))]
 if len(zips) != 1:
-    raise SystemExit(f"ERROR: expected exactly one versioned ZIP asset, found {len(zips)}")
+    raise SystemExit(f"ERROR: expected exactly one Classic WebUI ZIP asset, found {len(zips)}")
 
 zip_asset = zips[0]
 sha_name = zip_asset["name"] + ".sha256"
@@ -96,10 +92,7 @@ SHA_BROWSER_URL="$(printf '%s\n' "$ASSET_META" | sed -n '6p')"
 ZIP="$TMP/$ZIP_NAME"
 SHA="$TMP/$SHA_NAME"
 
-echo "    ZIP: $ZIP_NAME"
-echo "    SHA: $SHA_NAME"
-
-echo "==> Download Release assets"
+echo "==> Download $ZIP_NAME"
 if [ -n "${GH_TOKEN:-}" ]; then
     curl -fL --retry 3 \
         -H "Accept: application/octet-stream" \
@@ -130,7 +123,8 @@ for f in \
     "$PACKAGE_DIR/public/index.html" \
     "$PACKAGE_DIR/private/index.html" \
     "$PACKAGE_DIR/private/css/classic.css" \
-    "$PACKAGE_DIR/translations/webui_zh_CN.qm"
+    "$PACKAGE_DIR/translations/webui_zh_CN.qm" \
+    "$PACKAGE_DIR/COPYING"
 do
     [ -f "$f" ] || { echo "ERROR: missing regular file: $f"; exit 1; }
 done
@@ -179,4 +173,4 @@ echo
 echo "UPDATE_OK"
 echo "Installed: $ZIP_NAME"
 echo "Target: $TARGET"
-echo "qBittorrent Alternate WebUI root: /config/classic-webui"
+echo "qBittorrent Alternate WebUI path: /config/classic-webui"
