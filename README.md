@@ -31,26 +31,28 @@ scripts/update-nas.sh
 .github/workflows/build-release.yml
 ```
 
-## GitHub setup
+## Build triggers
 
-1. Create an empty repository, e.g. `qbittorrent-classic-webui`.
-2. Put this repository package into it and push to the default branch.
-3. Open **Actions → Build and release Classic WebUI → Run workflow**.
-4. Leave `qb_tag` empty to build the latest official stable qBittorrent release.
-5. The scheduled workflow checks once per day; an already-published qBittorrent + Classic version is skipped.
+The Release workflow runs in three cases:
 
-The workflow requires only the repository's built-in `GITHUB_TOKEN` and declares:
+- Pushes that change the Classic visual layer, build script, or workflow.
+- Manual **Actions → Build and release Classic WebUI → Run workflow**.
+- Daily scheduled check for a new official qBittorrent stable release.
+
+If a matching `qBittorrent version + Classic version` Release already exists, scheduled runs skip rebuilding it.
+
+The workflow uses the repository's built-in `GITHUB_TOKEN` and declares:
 
 ```yaml
 permissions:
   contents: write
 ```
 
-No personal access token is required for normal Release publishing.
+No personal access token is required for GitHub Actions to publish Releases.
 
 ## Release assets
 
-A successful build publishes both a versioned artifact and a stable "latest" asset:
+A successful build publishes both a versioned artifact and stable latest assets:
 
 ```text
 classic-webui-qb5.2.3-classic-v1.zip
@@ -89,13 +91,24 @@ Files location: /webui
 
 ## NAS update
 
-Run from the qBittorrent Compose directory:
+Run from the qBittorrent Compose directory.
+
+For a public GitHub repository:
 
 ```bash
-sh scripts/update-nas.sh OWNER/REPO
+sh /path/to/update-nas.sh juzijia/qbittorrent-classic-webui
 ```
 
-The updater downloads the latest Release, verifies SHA256 and required files, rejects symlinks/non-regular filesystem objects, briefly stops qBittorrent, swaps `./classic-webui`, and starts qBittorrent again.
+For a private GitHub repository, provide a fine-grained token with **Contents: Read-only** access to this repository:
+
+```bash
+GH_TOKEN='YOUR_FINE_GRAINED_TOKEN' \
+  sh /path/to/update-nas.sh juzijia/qbittorrent-classic-webui
+```
+
+Do not hard-code the token inside the script or Compose file.
+
+The updater downloads the latest Release, verifies SHA256 and required files, rejects symlinks/non-regular filesystem objects, briefly stops qBittorrent, swaps `./classic-webui`, and starts qBittorrent again. If startup fails, it rolls back the previous WebUI directory.
 
 ## Classic visual version
 
