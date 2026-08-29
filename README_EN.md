@@ -79,34 +79,30 @@ Enable **Use alternative WebUI** and set the files location to:
 
 4. Save the settings and refresh the browser.
 
-### Synology package (non-Docker)
+### App store / package version (non-Docker)
 
-If qBittorrent is installed as a Synology package:
+If qBittorrent is installed from a NAS app store or package center (for example fnOS, Synology DSM, or similar platforms):
 
-1. Extract `classic-webui.zip` to a shared folder that the qBittorrent package can read, for example:
+1. Extract `classic-webui.zip` to any directory that qBittorrent can read, for example:
 
 ```text
-/volume1/<shared-folder>/classic-webui
+<absolute-path>/classic-webui
 ```
 
 The directory should directly contain `public/`, `private/` and `translations/`.
 
-2. Open **Tools → Options → Web UI**, enable **Use alternative WebUI**, and set the files location to the actual absolute path, for example:
-
-```text
-/volume1/<shared-folder>/classic-webui
-```
+2. Open **Tools → Options → Web UI**, enable **Use alternative WebUI**, and set the files location to the actual absolute path of that directory.
 
 3. Save the settings and refresh the browser.
 
-> Make sure the qBittorrent package service account has read permission for this directory. Point to the `classic-webui` root directory (the parent of `public`), not to `public` itself.
+> Make sure the qBittorrent service account has read permission for this directory. Point to the `classic-webui` root directory (the parent of `public`), not to `public` itself. The actual path varies between NAS platforms.
 
 ## Updating
 
 Download the newest Release and replace the existing `classic-webui` directory.
 
 - Docker: keep `/config/classic-webui` unchanged in qBittorrent.
-- Synology package: keep the shared-folder absolute path you configured earlier unchanged.
+- App store / package version: keep the absolute path you configured earlier unchanged.
 
 ## Notes
 
