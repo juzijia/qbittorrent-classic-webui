@@ -26,6 +26,8 @@ GitHub Actions automatically builds Releases from official stable qBittorrent ve
 
 ## Installation
 
+### Docker
+
 1. Download from **Releases**:
 
 ```text
@@ -77,15 +79,34 @@ Enable **Use alternative WebUI** and set the files location to:
 
 4. Save the settings and refresh the browser.
 
+### Synology package (non-Docker)
+
+If qBittorrent is installed as a Synology package:
+
+1. Extract `classic-webui.zip` to a shared folder that the qBittorrent package can read, for example:
+
+```text
+/volume1/<shared-folder>/classic-webui
+```
+
+The directory should directly contain `public/`, `private/` and `translations/`.
+
+2. Open **Tools → Options → Web UI**, enable **Use alternative WebUI**, and set the files location to the actual absolute path, for example:
+
+```text
+/volume1/<shared-folder>/classic-webui
+```
+
+3. Save the settings and refresh the browser.
+
+> Make sure the qBittorrent package service account has read permission for this directory. Point to the `classic-webui` root directory (the parent of `public`), not to `public` itself.
+
 ## Updating
 
 Download the newest Release and replace the existing `classic-webui` directory.
 
-Keep the qBittorrent path unchanged:
-
-```text
-/config/classic-webui
-```
+- Docker: keep `/config/classic-webui` unchanged in qBittorrent.
+- Synology package: keep the shared-folder absolute path you configured earlier unchanged.
 
 ## Notes
 

@@ -26,6 +26,8 @@ GitHub Actions 会跟随 qBittorrent 官方稳定版自动构建 Release。
 
 ## 安装
 
+### Docker
+
 1. 在 **Releases** 下载：
 
 ```text
@@ -77,15 +79,34 @@ unzip classic-webui.zip -d ./classic-webui
 
 4. 保存设置并刷新浏览器。
 
+### 群晖套件版（非 Docker）
+
+如果 qBittorrent 通过群晖套件安装：
+
+1. 将 `classic-webui.zip` 解压到 qBittorrent 套件可读取的共享目录，例如：
+
+```text
+/volume1/<共享文件夹>/classic-webui
+```
+
+目录中应直接包含 `public/`、`private/` 和 `translations/`。
+
+2. 打开 **工具 → 选项 → Web UI**，启用 **使用备选 WebUI**，文件位置填写实际绝对路径，例如：
+
+```text
+/volume1/<共享文件夹>/classic-webui
+```
+
+3. 保存设置并刷新浏览器。
+
+> 请确保 qBittorrent 套件服务账号对该目录有读取权限。路径应填写 `classic-webui` 根目录（`public` 的上一级），不要填写 `public` 本身。
+
 ## 更新
 
 下载新的 Release，用新的 `classic-webui` 目录替换旧目录即可。
 
-qBittorrent 中的路径始终保持：
-
-```text
-/config/classic-webui
-```
+- Docker：qBittorrent 中保持 `/config/classic-webui` 不变。
+- 群晖套件版：保持之前填写的共享目录绝对路径不变。
 
 ## 说明
 
