@@ -79,34 +79,30 @@ unzip classic-webui.zip -d ./classic-webui
 
 4. 保存设置并刷新浏览器。
 
-### 群晖套件版（非 Docker）
+### 商店版（非 Docker）
 
-如果 qBittorrent 通过群晖套件安装：
+如果 qBittorrent 通过 NAS 系统的应用商店或套件中心安装（如飞牛 fnOS、群晖 DSM 等）：
 
-1. 将 `classic-webui.zip` 解压到 qBittorrent 套件可读取的共享目录，例如：
+1. 将 `classic-webui.zip` 解压到 qBittorrent 可读取的任意目录，例如：
 
 ```text
-/volume1/<共享文件夹>/classic-webui
+<绝对路径>/classic-webui
 ```
 
 目录中应直接包含 `public/`、`private/` 和 `translations/`。
 
-2. 打开 **工具 → 选项 → Web UI**，启用 **使用备选 WebUI**，文件位置填写实际绝对路径，例如：
-
-```text
-/volume1/<共享文件夹>/classic-webui
-```
+2. 打开 **工具 → 选项 → Web UI**，启用 **使用备选 WebUI**，文件位置填写该目录的实际绝对路径。
 
 3. 保存设置并刷新浏览器。
 
-> 请确保 qBittorrent 套件服务账号对该目录有读取权限。路径应填写 `classic-webui` 根目录（`public` 的上一级），不要填写 `public` 本身。
+> 请确保 qBittorrent 服务账号对该目录有读取权限。路径应填写 `classic-webui` 根目录（`public` 的上一级），不要填写 `public` 本身。不同 NAS 系统的实际路径可能不同。
 
 ## 更新
 
 下载新的 Release，用新的 `classic-webui` 目录替换旧目录即可。
 
 - Docker：qBittorrent 中保持 `/config/classic-webui` 不变。
-- 群晖套件版：保持之前填写的共享目录绝对路径不变。
+- 商店版：保持之前填写的绝对路径不变。
 
 ## 说明
 
